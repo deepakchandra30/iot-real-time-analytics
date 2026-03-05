@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules/
+
+# Python virtual environments
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment and config files
+.env
+.env.*
+*.env
+
+# Security and credential files
+iot-admin_accessKeys.csv
+certs/
+connect_device_package/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Misc
+screenshots/
+
+# VS Code settings
+.vscode/
