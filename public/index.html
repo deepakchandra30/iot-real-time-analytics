@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>IoT Real-Time Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #f6f7fb;
+      font-family: 'Inter', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #253053;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.3em;
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      letter-spacing: -1px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 24px;
+    }
+    .cards {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .card {
+      background: #fff;
+      flex: 1 1 0;
+      margin: 0 14px;
+      box-shadow: 0 3px 24px 0 #e3e7eb77;
+      border-radius: 16px;
+      text-align: center;
+      padding: 26px 12px 22px 12px;
+      min-width: 180px;
+    }
+    .card h2 {
+      font-size: 2.2em;
+      margin-bottom: 0.1em;
+      font-weight: 600;
+      color: #4361ee;
+    }
+    .card p {
+      color: #485675;
+      font-size: 1.02em;
+      margin: 0;
+      letter-spacing: 0.04em;
+    }
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 32px;
+      margin-top: 32px;
+    }
+    .chart-box {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px #dde2ee55;
+      padding: 18px;
+      text-align: center;
+    }
+    .chart-box h3 {
+      margin-bottom: 10px;
+      font-weight: 500;
+      font-size: 1.1em;
+      color: #425cbf;
+    }
+    @media (max-width: 900px) {
+      .cards, .charts { flex-direction: column; grid-template-columns: 1fr; }
+      .card, .chart-box { margin: 10px 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>IoT Realtime Sensor Dashboard</h1>
+  <div class="container">
+    <div class="cards" id="cards"></div>
+    <div class="charts">
+      <div class="chart-box">
+        <h3>Temperature (°C)</h3>
+        <canvas id="temperature"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Humidity (%)</h3>
+        <canvas id="humidity"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Pressure (hPa)</h3>
+        <canvas id="pressure"></canvas>
+      </div>
+    </div>
+  </div>
+  <script>
+    // --- Chart objects for updating ---
+    const charts = {};
+
+    async function showLatestAndAggregate() {
+      const latest = await fetch('/api/latest').then(r=>r.json());
+      const aggregate = await fetch('/api/aggregate').then(r=>r.json());
+      const sensors = [
+        {key:'temperature', name:'Temperature', unit:'°C', color:'#ef476f'},
+        {key:'humidity', name:'Humidity', unit:'%', color:'#118ab2'},
+        {key:'pressure', name:'Pressure', unit:'hPa', color:'#06d6a0'}
+      ];
+      document.getElementById('cards').innerHTML = sensors.map(s => `
+        <div class="card" style="border-top: 4px solid ${s.color}">
+          <h2>${latest[s.key] !== undefined ? latest[s.key] : '--'}</h2>
+          <p>${s.name}</p>
+          <hr style="border:none; border-bottom:1px solid #edf0f7;margin:14px 0 9px 0;">
+          <p style="font-size:0.98em;color:#8894b2;">
+            <b>Avg:</b> ${aggregate[s.key]?.avg ?? '--'} &nbsp; | &nbsp; 
+            <b>Min:</b> ${aggregate[s.key]?.min ?? '--'} &nbsp; | &nbsp;
+            <b>Max:</b> ${aggregate[s.key]?.max ?? '--'}
+          </p>
+        </div>
+      `).join('');
+    }
+
+    async function showCharts() {
+      const history = await fetch('/api/history').then(r=>r.json());
+      renderLineChart('temperature', history.temperature ?? [], '#ef476f');
+      renderLineChart('humidity', history.humidity ?? [], '#118ab2');
+      renderLineChart('pressure', history.pressure ?? [], '#06d6a0');
+    }
+
+    function renderLineChart(sensor, data, color) {
+      const ctx = document.getElementById(sensor).getContext('2d');
+      const times = data.map(v => v.timestamp.slice(11,19));
+      const vals = data.map(v => v.value);
+      if(charts[sensor]) {
+        charts[sensor].data.labels = times;
+        charts[sensor].data.datasets[0].data = vals;
+        charts[sensor].update();
+      } else {
+        charts[sensor] = new Chart(ctx, {
+          type:'line',
+          data:{
+            labels:times,
+            datasets:[{
+              label:sensor,
+              data:vals,
+              backgroundColor:'rgba(255,255,255,0)',
+              borderColor: color,
+              borderWidth:2, pointRadius:2, tension:0.22
+            }]
+          },
+          options:{
+            plugins: { legend: { display: false } },
+            scales: {
+              x:{ title: {display:false }},
+              y:{ title: {display:false } }
+            }
+          }
+        });
+      }
+    }
+
+    showLatestAndAggregate();
+    showCharts();
+    setInterval(()=>{showLatestAndAggregate();showCharts();}, 100);
+  </script>
+</body>
+</html>
