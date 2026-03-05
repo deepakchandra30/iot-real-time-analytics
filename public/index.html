@@ -13,6 +13,28 @@
       padding: 0;
       color: #253053;
     }
+    body.alert-bg {
+      background: #ffdde0 !important;
+      transition: background 0.3s;
+    }
+    #dashboard-alert {
+      max-width: 1100px;
+      margin: 0 auto 16px auto;
+      padding: 18px 26px;
+      border-radius: 10px;
+      color: #a61619;
+      background: #ffd5d7;
+      border: 1px solid #f0838b;
+      font-weight: 600;
+      font-size: 1.11em;
+      letter-spacing: 0.04em;
+      display: none;
+      text-align: center;
+      box-shadow: 0px 2px 14px #fba9a366;
+    }
+    body.alert-bg #dashboard-alert {
+      display: block;
+    }
     h1 {
       text-align: center;
       font-size: 2.3em;
@@ -80,6 +102,7 @@
 </head>
 <body>
   <h1>IoT Realtime Sensor Dashboard</h1>
+  <div id="dashboard-alert"></div>
   <div class="container">
     <div class="cards" id="cards"></div>
     <div class="charts">
@@ -162,9 +185,27 @@
       }
     }
 
+    async function showAlert() {
+      const res = await fetch('/api/alert');
+      const data = await res.json();
+      const alertDiv = document.getElementById('dashboard-alert');
+      if (data.alert && data.message) {
+        document.body.classList.add('alert-bg');
+        alertDiv.innerHTML = data.message;
+        alertDiv.style.display = 'block';
+      } else {
+        document.body.classList.remove('alert-bg');
+        alertDiv.style.display = 'none';
+      }
+    }
     showLatestAndAggregate();
     showCharts();
-    setInterval(()=>{showLatestAndAggregate();showCharts();}, 100);
+    showAlert();
+    setInterval(()=>{
+      showLatestAndAggregate();
+      showCharts();
+      showAlert();
+    }, 100);
   </script>
 </body>
 </html>
