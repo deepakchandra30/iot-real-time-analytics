@@ -39,7 +39,78 @@ This project shows how you can collect sensor data from a virtual Raspberry Pi (
    ```
 2. **Start web app:**
    ```sh
+   node app.js# IoT Real-Time Analytics
+
+## Project Summary
+This project demonstrates how one can get sensor data into a virtual Raspberry Pi (a simulator of a Sense HAT with a Node-RED), transmit it into the AWS cloud, store it and analyse it, raise alerts and see all of this in a web dashboard.
+
+## System Overview
+
+**Components:**
+- **Node-RED + Sense HAT Simulator:** Generates sensor data (temperature, humidity, pressure, latitude, longitude) and sends it to AWS IoT Core.
+- **AWS IoT Core:** Receives MQTT data on the devices.
+- **IoT Rule:** Send information to dynamoDB and provides warning to SNS (email) in case of temperature exceeding 35degC or humidity exceeding 80%.
+- **DynamoDB:**  is the store of all incoming IoT data.
+- **SNS:** Email notification on alert conditions.
+- **Web App (Node.js + Express + Chart.js):** Retrieves the data in DynamoDB, displays the latest values, aggregation, charts and notifications.
+
+## Architecture Diagram
+
+![Architecture Diagram](IoT_Architecture_Diagram.png)
+
+
+Node-Red:
+![image-2.png](attachment:image-2.png)
+
+
+## Key Features
+
+- Gathers and transmits information of three sensors and location.
+- Saves all observations inside DynamoDB with time.
+- Sends email when it becomes too hot or humid.
+- Web dashboard displays:
+  - Latest sensor values
+  - Min/Max/Avg for the last hour
+  - Separate chart for each sensor
+  - Visual signal in case threshold is surpassed.
+
+## How to Run
+
+1. **Clone repository & install dependencies:**
+   ```sh
+   git clone https://github.com/deepakchandra30/iot-real-time-analytics.git
+   cd iot-real-time-analytics
+   npm install
+   ```
+2. **Start web app:**
+   ```sh
    node app.js
+   ```
+   - Dashboard: [http://localhost:3000](http://localhost:3000)
+
+3. **Start Node-RED Sense HAT Simulator:**
+   - Run `node-red`
+   - Go to [http://localhost:1880](http://localhost:1880)
+   - Deploy the simulation flow.  
+     (This will connect to AWS IoT and send sensor data.)
+
+4. **Make sure AWS IoT Core, DynamoDB, and SNS are set up as described above.**
+
+5. **Open the dashboard for live analytics, charts, and alerts.**
+
+## Demo Video
+
+**YouTube Demo:** [LINK_TO_YOUR_VIDEO](https://youtube.com/...)
+
+## Notes
+
+- You might need AWS credentials to run it
+- AWS SNS includes email alerts whenever a threshold has been violated.
+- System supports any simulable nodes of Node-RED.
+
+
+
+Email example: ![image.png](attachment:image.png)
    ```
    - Dashboard: [http://localhost:3000](http://localhost:3000)
 
