@@ -3,21 +3,17 @@ const cors = require('cors');
 const app = express();
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
-const csvStringify = require('csv-stringify/sync'); // npm install csv-stringify
+const csvStringify = require('csv-stringify/sync');
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: "eu-north-1" }));
 const TABLE_NAME = "SensorData";
 
-// Enable CORS (for easy dev/testing/multi-frontend)
 app.use(cors());
 
-// Serve static files from the public directory
 app.use(express.static(__dirname + "/public"));
 
-// Helper for consistent sensor fields
 const SENSOR_FIELDS = ['temperature', 'humidity', 'pressure', 'latitude', 'longitude'];
 
-// Utility: flatten item for UI
 function flatten(item) {
     if (!item) return {};
     const flat = { ...item, ...item.payload };
@@ -25,7 +21,6 @@ function flatten(item) {
     return flat;
 }
 
-// GET: Unique device IDs
 app.get('/api/devices', async (req, res) => {
     try {
         const params = { TableName: TABLE_NAME };
@@ -37,12 +32,11 @@ app.get('/api/devices', async (req, res) => {
     }
 });
 
-// GET: Latest value for device (default: first device found)
 app.get('/api/latest', async (req, res) => {
     try {
         let deviceId = req.query.device_id;
         if (!deviceId) {
-            // Find any existing device (fallback)
+            
             const tmp = await client.send(new ScanCommand({ TableName: TABLE_NAME, Limit: 1 }));
             deviceId = tmp.Items[0]?.device_id || "";
         }
@@ -61,12 +55,11 @@ app.get('/api/latest', async (req, res) => {
     }
 });
 
-// GET: Aggregate min/max/avg for each sensor, for last hour (or provided range)
 app.get('/api/aggregate', async (req, res) => {
     try {
         let { device_id, from, to } = req.query;
         if (!device_id) {
-            // fallback: get any device
+            
             const tmp = await client.send(new ScanCommand({ TableName: TABLE_NAME, Limit: 1 }));
             device_id = tmp.Items[0]?.device_id || "";
         }
@@ -102,7 +95,6 @@ app.get('/api/aggregate', async (req, res) => {
     }
 });
 
-// GET: Full chart history data (default last hour, or pass ?from=...&to=...)
 app.get('/api/history', async (req, res) => {
     try {
         let { device_id, from, to } = req.query;
@@ -124,7 +116,6 @@ app.get('/api/history', async (req, res) => {
             ScanIndexForward: true
         };
         const data = await client.send(new QueryCommand(params));
-        // Structure: per-sensor array
         const out = {};
         SENSOR_FIELDS.forEach(sensor => {
             out[sensor] = (data.Items || []).map(item => ({
@@ -138,7 +129,6 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// GET: Full raw table, or for specific device (caution: can be large!)
 app.get('/api/raw', async (req, res) => {
     try {
         let { device_id } = req.query;
@@ -152,7 +142,6 @@ app.get('/api/raw', async (req, res) => {
     }
 });
 
-// GET: CSV export for history or raw data
 app.get('/api/csv', async (req, res) => {
     try {
         let { device_id, from, to } = req.query;
@@ -184,7 +173,6 @@ app.get('/api/csv', async (req, res) => {
     }
 });
 
-// 404 fallback
 app.use((req, res) => res.status(404).json({error: "Not found"}));
 
 app.listen(3000, () => console.log('Dashboard backend running on http://localhost:3000'));
