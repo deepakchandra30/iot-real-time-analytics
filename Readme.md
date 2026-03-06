@@ -55,7 +55,7 @@ This project shows how you can collect sensor data from a virtual Raspberry Pi (
 
 ## Demo Video
 
-**YouTube Demo:** [LINK_TO_YOUR_VIDEO](https://youtube.com/...)
+**YouTube Demo:** [LINK_TO_YOUR_VIDEO](https://youtu.be/wdQQllP6vkw)
 
 ## Notes
 
