@@ -19,7 +19,7 @@ This project demonstrates how one can get sensor data into a virtual Raspberry P
 
 
 Node-Red:
-![image-2.png](attachment:image-2.png)
+![image-2.png](Nodered.png)
 
 
 ## Key Features
@@ -69,4 +69,4 @@ Node-Red:
 
 
 
-Email example: ![image.png](attachment:image.png)
+Email example: ![image.png](email.png)
